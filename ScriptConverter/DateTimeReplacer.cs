@@ -20,7 +20,6 @@ UNION SELECT len('066FEBA2A811A8330B')
 UNION SELECT len('0757325D96B0A8330B')
 
 
-
       SELECT CAST(0x00442801A8330B AS DateTime2),1 as ord 
 UNION SELECT CAST(0x01A5920BA8330B AS DateTime2),2 as ord 
 UNION SELECT CAST(0x0271BA73A8330B AS DateTime2),3 as ord 
@@ -31,7 +30,6 @@ UNION SELECT CAST(0x066FEBA2A811A8330B AS DateTime2),7 as ord
 UNION SELECT CAST(0x0757325D96B0A8330B AS DateTime2),8 as ord 
 
 ORDER BY ord 
-
 ";
             
             sql = ReplaceDateTime(sql);
@@ -126,7 +124,7 @@ ORDER BY ord
                 ,new System.Text.RegularExpressions.MatchEvaluator(ReplaceDateTime2Match)
                 ,System.Text.RegularExpressions.RegexOptions.IgnoreCase
             );
-        }
+        } // End Function ReplaceDateTime2 
 
 
         private static string ReplaceDateTime2Match(System.Text.RegularExpressions.Match ma)
@@ -138,7 +136,7 @@ ORDER BY ord
             str = "'" + HexDateTime2ToDateTimeString(str) + "'";
 
             return str;
-        } // End Function ReplaceDateTime2 
+        } // End Function ReplaceDateTime2Match 
 
 
         public static string ReplaceDate(string input)
@@ -147,7 +145,7 @@ ORDER BY ord
                 , new System.Text.RegularExpressions.MatchEvaluator(ReplaceDateMatch)
                 , System.Text.RegularExpressions.RegexOptions.IgnoreCase
             );
-        }
+        } // End Function ReplaceDate
 
 
         public static string ReplaceDateTime(string input)
@@ -156,7 +154,7 @@ ORDER BY ord
                 , new System.Text.RegularExpressions.MatchEvaluator(ReplaceDateTimeMatch)
                 , System.Text.RegularExpressions.RegexOptions.IgnoreCase
             );
-        }
+        } // End Function ReplaceDateTime
 
 
         private static string ReplaceDateTimeMatch(System.Text.RegularExpressions.Match ma)
@@ -168,7 +166,7 @@ ORDER BY ord
             str = "'" + HexDateTimeToDateTimeString(str) + "'";
 
             return str;
-        } // End Function ReplaceDateTime 
+        } // End Function ReplaceDateTimeMatch 
 
 
         private static string ReplaceDateMatch(System.Text.RegularExpressions.Match ma)
@@ -180,7 +178,7 @@ ORDER BY ord
             str = "'" + HexDateToDateString(str) + "'";
 
             return str;
-        } // End Function ReplaceDateTime 
+        } // End Function ReplaceDateMatch 
 
 
         // http://stackoverflow.com/questions/7412944/convert-datetime-to-hex-equivalent-in-vb-net
@@ -222,11 +220,11 @@ ORDER BY ord
             string s = j.ToString("X06");
             s = ReverseBytes(s);
             return "0x" + s;
-        }
+        } // End Function GetDateAsHex 
 
 
         // System.DateTime to SQL-Server 0xHEX datetime-value
-        public string GetTimeAsHex(System.DateTime dt)
+        public string GetDateTimeAsHex(System.DateTime dt)
         {
             System.DateTime zero = new System.DateTime(1900, 1, 1);
 
@@ -243,7 +241,34 @@ ORDER BY ord
 
             string hex = "0x" + ts.Days.ToString("X8") + System.Convert.ToInt32(x).ToString("X8");
             return hex;
-        }
+        } // End Function GetDateTimeAsHex 
+
+        /*
+CREATE TABLE dbo.MyTable
+(
+	 value datetime2(7) NULL 
+	,string varchar(50) NULL 
+	,mydate date NULL 
+	,mytime time(7) NULL 
+); 
+
+ALTER TABLE MyTable 
+ADD MyDateTime2 AS 
+(
+	DATEADD
+	(
+		 day 
+		,DATEDIFF
+		(
+			 day
+			,CONVERT( DATE, '19000101', 112)
+			, mydate
+		)
+		,CONVERT(datetime2(7), mytime)
+	)
+) PERSISTED
+
+         */
 
 
     } // End Class DateTimeReplacer
