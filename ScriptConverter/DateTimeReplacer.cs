@@ -30,11 +30,27 @@ UNION SELECT CAST(0x066FEBA2A811A8330B AS DateTime2),7 as ord
 UNION SELECT CAST(0x0757325D96B0A8330B AS DateTime2),8 as ord 
 
 ORDER BY ord 
+
+
+
+
+INSERT INTO someTime (mytime, myText) VALUES (CAST(0x0700000000000000 AS Time), '00:00:00.0000000')
+INSERT INTO someTime (mytime, myText) VALUES (CAST(0x070068C461080000 AS Time), '01:00:00.0000000')
+INSERT INTO someTime (mytime, myText) VALUES (CAST(0x070010ACD1530000 AS Time), '10:00:00.0000000')
+INSERT INTO someTime (mytime, myText) VALUES (CAST(0x07001882BA7D0000 AS Time), '15:00:00.0000000')
+INSERT INTO someTime (mytime, myText) VALUES (CAST(0x07002058A3A70000 AS Time), '20:00:00.0000000')
+INSERT INTO someTime (mytime, myText) VALUES (CAST(0x07007AA606C90000 AS Time), '23:59:00.0000000')
+INSERT INTO someTime (mytime, myText) VALUES (CAST(0x0780103F07C90000 AS Time), '23:59:01.0000000')
+INSERT INTO someTime (mytime, myText) VALUES (CAST(0x07001D8818C90000 AS Time), '23:59:30.0000000')
+INSERT INTO someTime (mytime, myText) VALUES (CAST(0x07007F1EA7740000 AS Time), '13:55:02.0000000')
+INSERT INTO someTime (mytime, myText) VALUES (CAST(0x073FD11E19C90000 AS Time), '23:59:30.9876543')
+
 ";
             
             sql = ReplaceDateTime(sql);
             sql = ReplaceDateTime2(sql);
             sql = ReplaceStringGuid(sql);
+            sql = ReplaceTime(sql);
 
             System.Console.WriteLine(sql);
         } // End Sub Test 
@@ -148,6 +164,15 @@ ORDER BY ord
         } // End Function ReplaceDate
 
 
+        public static string ReplaceTime(string input)
+        {
+            return System.Text.RegularExpressions.Regex.Replace(input, @"CAST\s*\(\s*0x[a-f0-9]{16}\s*AS\s*time\s*\)"
+                , new System.Text.RegularExpressions.MatchEvaluator(ReplaceTimeMatch)
+                , System.Text.RegularExpressions.RegexOptions.IgnoreCase
+            );
+        } // End Function ReplaceTime
+
+
         public static string ReplaceDateTime(string input)
         {
             return System.Text.RegularExpressions.Regex.Replace(input, @"CAST\s*\(\s*0x[a-f0-9]{16}\s*AS\s*datetime\s*\)"
@@ -176,6 +201,18 @@ ORDER BY ord
             str = str.Replace("cast(0x", "");
             str = str.Replace("asdate)", "");
             str = "'" + HexDateToDateString(str) + "'";
+
+            return str;
+        } // End Function ReplaceDateMatch 
+
+
+        private static string ReplaceTimeMatch(System.Text.RegularExpressions.Match ma)
+        {
+            string str = System.Text.RegularExpressions.Regex.Replace(ma.Value, @"\s*", "");
+            str = str.ToLower();
+            str = str.Replace("cast(0x", "");
+            str = str.Replace("astime)", "");
+            str = "'" + HexTimeToTimeString(str) + "'";
 
             return str;
         } // End Function ReplaceDateMatch 
@@ -212,6 +249,25 @@ ORDER BY ord
         } // End Function HexDateToDateString
 
 
+        public static string HexTimeToTimeString(string timeHexString)
+        {
+            string precision = timeHexString.Substring(0, 2);
+            precision = ReverseBytes(precision);
+            int iPrecision = System.Convert.ToInt32(precision, 16);
+
+
+            string timePart = timeHexString.Substring(2);
+            timePart = ReverseBytes(timePart);
+            long lngTimePart = System.Convert.ToInt64(timePart, 16);
+            System.DateTime dateTimeFinal = new System.DateTime(1, 1, 1);
+            dateTimeFinal = dateTimeFinal.AddTicks((long)(lngTimePart * 1.0 / System.Math.Pow(10, iPrecision) * System.TimeSpan.TicksPerSecond));
+            string time = dateTimeFinal.ToString("HH:mm:ss.fffffff");
+            System.Console.WriteLine(time);
+
+            return time;
+        } // End Function HexTimeToTimeString 
+
+
         public string GetDateAsHex(System.DateTime dt)
         {
             System.DateTime zero = new System.DateTime(1, 1, 1);
@@ -243,7 +299,11 @@ ORDER BY ord
             return hex;
         } // End Function GetDateTimeAsHex 
 
-        /*
+
+/*
+-- https://stackoverflow.com/questions/14124439/cannot-persist-computed-column-not-deterministic
+-- https://www.mssqltips.com/sqlservertip/3338/change-all-computed-columns-to-persisted-in-sql-server/
+
 CREATE TABLE dbo.MyTable
 (
 	 value datetime2(7) NULL 
@@ -267,9 +327,9 @@ ADD MyDateTime2 AS
 		,CONVERT(datetime2(7), mytime)
 	)
 ) PERSISTED
-
-         */
-
+;
+*/
+        
 
     } // End Class DateTimeReplacer
 
