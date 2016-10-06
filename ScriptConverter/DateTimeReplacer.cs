@@ -262,7 +262,7 @@ ADD MyDateTime2 AS
 		(
 			 day
 			,CONVERT( DATE, '19000101', 112)
-			, mydate
+			,mydate
 		)
 		,CONVERT(datetime2(7), mytime)
 	)
